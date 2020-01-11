@@ -6,11 +6,9 @@
 draw_panel(Daylight,Actual, Given, Sens_damage, {Stat1, {{Given_start_H, Given_start_M},{Given_stop_H, Given_stop_M}}}, Feed_date) ->
     io:format("\t ==========================\n"),
     io:format("\t||Naturalna jasnosc    ~p lx ||\n", [Daylight]),
-    %io:format("\t||Aktualne oswietlenie    ~p st.C ||\n", [Actual]),
-    io:format("\t||Zadane oswietlenie   ~p st.C ||\n", [Given]),
-    io:format("\t||Now  temp.    ~p st.C ||\n", [round1dec(Actual)]),
-    %io:format("\t||Given temp.   ~p st.C ||\n", [float(Given)]),
-    io:format("\t||Sens. err.       ~s    ||\n", [Sens_damage]),
+    io:format("\t||Potrzebne oswietlenie   ~p lx ||\n", [Given]),
+    io:format("\t||automatyczne oswietlenie    ~p lx||\n", [Actual]),
+    io:format("\t||Stan czujników       ~s    ||\n", [Sens_damage]),
     io:format("\t||Lamp             ~s    ||\n", [add_space_after(Stat1)]),
     io:format("\t||Lamp Start      ~s   ||\n", [time_string({Given_start_H, Given_start_M})]),
     io:format("\t||Lamp Stop       ~s   ||\n", [time_string({Given_stop_H, Given_stop_M})]),
@@ -22,13 +20,20 @@ draw_panel(Daylight,Actual, Given, Sens_damage, {Stat1, {{Given_start_H, Given_s
 
 option_menu() ->
     io:format("\n
+        [0] Exit \n
         [1] Given temp UP\n
         [2] Given temp DOWN\n
-        [3] Simulate sensor error\n
+        [3] zepsuj/napraw czujniki\n
         [4] Set lamp start time\n
         [5] Set lamp stop time\n
         [6] Vouch feed date\n
-        [0] Exit \n\n
+        [7] minimalne oświetlenie/ brak \n
+        [8] Zapotrzebowanie na oświetlenie nocne \n
+        [9] Zapotrzebowanie na oświetlenie delikatne\n
+        [10] Zapotrzebowanie na oświetlenie do pracy przy komputerze \n
+        [11] Zapotrzebowanie na oświetlenie do pracy szczegółowej\n
+        [12] Zapotrzebowanie na pełne oświetlenie\n
+
 Select: ").
 
 

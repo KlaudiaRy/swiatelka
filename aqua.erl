@@ -9,7 +9,20 @@
 % % Dedfines 
 -define(start_temp, 23).
 -define(sensor_damage, 0).
--define(given_temp_at_start, 32).
+-define(given_light_prefference, 1000).
+-define(night_light,20).
+-define(soft_light,50).
+-define(minimum_light,0).
+-define(computer_work_light,500).
+-define(work_light,1000).
+-define(maximum_light,5000).
+
+
+
+
+
+
+
 -define(start_brightness,4100).
 % File with last feed date
 -define(data_file, "./data/date.txt").
@@ -24,9 +37,9 @@ run() ->
     P_lamp = spawn(fun lamp/0),
     P_timer = spawn(aqua, timer, [{{0,0},{0,0},undefined, P_lamp, off}]),
     P_day = spawn(fun daylight_changer/0),
-    %P_day!{?start_brightness,on},
+    P_bright = spawn(fun automatic_lights/0),
     Feed_date = read_from_file(?data_file),
-    P_main = spawn(aqua, main, [{?start_brightness,P_day,on,P_tmp_sens, P_heater, P_timer, float(?start_temp), ?sensor_damage, ?given_temp_at_start, {off, {{0,0},{0,0}}}, Feed_date}]),
+    P_main = spawn(aqua, main, [{?start_brightness,P_bright,P_day,on,P_tmp_sens, P_heater, P_timer, float(?start_temp), ?sensor_damage, ?given_light_prefference, {off, {{0,0},{0,0}}}, Feed_date}]),
     control_listener({P_tmp_sens, P_heater, P_main}).
 
 % Waiting for interrup 
@@ -37,9 +50,10 @@ control_listener({P_tmp_sens, P_heater, P_main}) ->
     control_listener({P_tmp_sens, P_heater, P_main}). %ponownie nasłuchuje - uruchamia sam siebie
 
 
-main({Daylight,P_day,Up_down,P_tmp_sens, P_heater, P_timer, Actual_temp, Sens_damage, Given, Stat, Feed_date}) -> %przybiera wszystkie zmienialne dane
+main({Daylight,P_bright,P_day,Up_down,P_tmp_sens, P_heater, P_timer, Actual_temp, Sens_damage, Given, Stat, Feed_date}) -> %przybiera wszystkie zmienialne dane
     io:format(os:cmd(clear)),
     io:format("----===== Aquarium Control Manager =====---- \n\n"),
+    
     if
         Sens_damage =:= 0 ->
             Sens_status = "No ";
@@ -62,25 +76,22 @@ main({Daylight,P_day,Up_down,P_tmp_sens, P_heater, P_timer, Actual_temp, Sens_da
     receive
         {data, up, Value} ->
             Updated_temp = Actual_temp + Value,
-            main({Daylight,P_day,Up_down_n,P_tmp_sens, P_heater, P_timer, Updated_temp, Sens_damage, Given, Stat, Feed_date});
+            main({Daylight,P_bright,P_day,Up_down_n,P_tmp_sens, P_heater, P_timer, Updated_temp, Sens_damage, Given, Stat, Feed_date});
 
         {data, down, Value} ->
             Updated_temp = Actual_temp - Value,
-            main({Daylight,P_day,Up_down_n,P_tmp_sens, P_heater, P_timer, Updated_temp, Sens_damage, Given, Stat, Feed_date});
+            main({Daylight,P_bright,P_day,Up_down_n,P_tmp_sens, P_heater, P_timer, Updated_temp, Sens_damage, Given, Stat, Feed_date});
 
         {lamp, Albert} ->
-            main({Daylight,P_day,Up_down_n,P_tmp_sens, P_heater, P_timer, Actual_temp, Sens_damage, Given, Albert, Feed_date});
+            main({Daylight,P_bright,P_day,Up_down_n,P_tmp_sens, P_heater, P_timer, Actual_temp, Sens_damage, Given, Albert, Feed_date});
+        {brightness, Perfect_val} ->
+            main({Daylight,P_bright,P_day,Up_down_n,P_tmp_sens, P_heater, P_timer, Perfect_val, Sens_damage, Given, Stat, Feed_date});
         
         {daylights, Val} ->
-            main({Val,P_day,Up_down_n,P_tmp_sens, P_heater, P_timer, Actual_temp, Sens_damage, Given, Stat, Feed_date});
+            main({Val,P_bright,P_day,Up_down_n,P_tmp_sens, P_heater, P_timer, Actual_temp, Sens_damage, Given, Stat, Feed_date});
 
         {feed, Parse_date} ->
-            main({Daylight,P_day,Up_down_n,P_tmp_sens, P_heater, P_timer, Actual_temp, Sens_damage, Given, Stat, Parse_date});
-
-
-        {daylight, Change} ->
-            New_light = Change+Daylight,
-            main({New_light,P_day,Up_down_n,P_tmp_sens, P_heater, P_timer, Actual_temp, Sens_damage, Given, Stat, Feed_date});
+            main({Daylight,P_bright,P_day,Up_down_n,P_tmp_sens, P_heater, P_timer, Actual_temp, Sens_damage, Given, Stat, Parse_date});
 
         {control, 0} -> %Exit
             init:stop(0);
@@ -88,54 +99,76 @@ main({Daylight,P_day,Up_down,P_tmp_sens, P_heater, P_timer, Actual_temp, Sens_da
           {control, 1} -> %Given light UP
             Given_plus_one = Given + 50,
             Given_checked = is_light_avaliable(Given_plus_one),
-            main({Daylight,P_day,Up_down_n,P_tmp_sens, P_heater, P_timer, Actual_temp, Sens_damage, Given_checked, Stat, Feed_date});
+            main({Daylight,P_bright,P_day,Up_down_n,P_tmp_sens, P_heater, P_timer, Actual_temp, Sens_damage, Given_checked, Stat, Feed_date});
 
         {control, 2} -> %Given temp DOWN
             Given_subs_one = Given - 50,
             Given_checked = is_light_avaliable(Given_subs_one),
-            main({Daylight,P_day,Up_down_n,P_tmp_sens, P_heater, P_timer, Actual_temp, Sens_damage, Given_checked, Stat, Feed_date});
+            main({Daylight,P_bright,P_day,Up_down_n,P_tmp_sens, P_heater, P_timer, Actual_temp, Sens_damage, Given_checked, Stat, Feed_date});
         
         {control, 3} -> %sensor error
             if 
                 Sens_damage =:= 1 ->
                     % Turn off sensor errror
-                    main({Daylight,P_day,Up_down_n,P_tmp_sens, P_heater, P_timer, Actual_temp, 0, Given, Stat, Feed_date});
+                    main({Daylight,P_bright,P_day,Up_down_n,P_tmp_sens, P_heater, P_timer, Actual_temp, 0, Given, Stat, Feed_date});
                 true -> 
                     %  Turn on sensor errror
-                    main({Daylight,P_day,Up_down_n,P_tmp_sens, P_heater, P_timer, Actual_temp, 1, Given, Stat, Feed_date})
+                    main({Daylight,P_bright,P_day,Up_down_n,P_tmp_sens, P_heater, P_timer, Actual_temp, 1, Given, Stat, Feed_date})
             end;
 
         {control, 4} -> %Set lamp start time
             {H, M} = get_time(),
             P_timer ! {time_to_start,H,M, self()},
-            main({Daylight,P_day,Up_down_n,P_tmp_sens, P_heater, P_timer, Actual_temp, Sens_damage, Given, Stat, Feed_date});
+            main({Daylight,P_bright,P_day,Up_down_n,P_tmp_sens, P_heater, P_timer, Actual_temp, Sens_damage, Given, Stat, Feed_date});
 
         {control, 5} -> %Set lamp stop time
             {H, M} = get_time(),
             P_timer ! {time_to_stop,H,M, self()},
-            main({Daylight,P_day,Up_down_n,P_tmp_sens, P_heater, P_timer, Actual_temp, Sens_damage, Given, Stat, Feed_date});
+            main({Daylight,P_bright,P_day,Up_down_n,P_tmp_sens, P_heater, P_timer, Actual_temp, Sens_damage, Given, Stat, Feed_date});
 
         {control, 6} -> %Update last feed date
             P_feed = spawn(fun feed/0),
             P_feed ! {generate, self()},
-            main({Daylight,P_day,Up_down_n,P_tmp_sens, P_heater, P_timer, Actual_temp, Sens_damage, Given, Stat, Feed_date});
+            main({Daylight,P_bright,P_day,Up_down_n,P_tmp_sens, P_heater, P_timer, Actual_temp, Sens_damage, Given, Stat, Feed_date});
+{control, 7} -> %Update last feed date
+            main({Daylight,P_bright,P_day,Up_down_n,P_tmp_sens, P_heater, P_timer, Actual_temp, Sens_damage, ?minimum_light, Stat, Feed_date});
+
+{control, 8} -> %Update last feed date
+            main({Daylight,P_bright,P_day,Up_down_n,P_tmp_sens, P_heater, P_timer, Actual_temp, Sens_damage, ?night_light, Stat, Feed_date});
+
+{control, 9} -> %Update last feed date
+
+            main({Daylight,P_bright,P_day,Up_down_n,P_tmp_sens, P_heater, P_timer, Actual_temp, Sens_damage, ?soft_light, Stat, Feed_date});
+
+{control, 10} -> %Update last feed date
+
+            main({Daylight,P_bright,P_day,Up_down_n,P_tmp_sens, P_heater, P_timer, Actual_temp, Sens_damage, ?computer_work_light, Stat, Feed_date});
+
+{control, 11} -> %Update last feed date
+
+            main({Daylight,P_bright,P_day,Up_down_n,P_tmp_sens, P_heater, P_timer, Actual_temp, Sens_damage, ?work_light, Stat, Feed_date});
+
+{control, 12} -> %Update last feed date
+
+            main({Daylight,P_bright,P_day,Up_down_n,P_tmp_sens, P_heater, P_timer, Actual_temp, Sens_damage, ?maximum_light, Stat, Feed_date});
 
         _ ->
-            main({Daylight,P_day,Up_down_n,P_tmp_sens, P_heater, P_timer, Actual_temp, Sens_damage, Given, Stat, Feed_date})
+            main({Daylight,P_bright,P_day,Up_down_n,P_tmp_sens, P_heater, P_timer, Actual_temp, Sens_damage, Given, Stat, Feed_date})
         
 
     after 1000 -> 
         if
             Sens_damage =:= 0 ->
+                P_bright!{onn,self(),Daylight,Given},
                 P_tmp_sens!{P_heater,self(), Actual_temp, Given},
 
               
                 P_day!{Up_down,self(),Daylight},
 
-                main({Daylight,P_day,Up_down_n,P_tmp_sens, P_heater, P_timer, Actual_temp, Sens_damage, Given, Stat, Feed_date});
+                main({Daylight,P_bright,P_day,Up_down_n,P_tmp_sens, P_heater, P_timer, Actual_temp, Sens_damage, Given, Stat, Feed_date});
                 
             true ->
-                main({Daylight,P_day,Up_down_n,P_tmp_sens, P_heater, P_timer, Actual_temp, Sens_damage, Given, Stat, Feed_date})
+                main({Daylight,P_bright,P_day,Up_down_n,P_tmp_sens, P_heater, P_timer, Actual_temp, Sens_damage, Given, Stat, Feed_date})
         end
     end.
   
@@ -173,6 +206,20 @@ heater() ->
             P_main!{data, down, Rand_val},
             heater()
     end.
+
+automatic_lights() ->
+    receive
+        {onn,P_main,Daylight,Given} ->
+            Perfect_val = Given-Daylight,
+            if Perfect_val<0 ->
+                Val = 0;
+            true ->
+                Val = Perfect_val
+            end,
+            P_main!{brightness, Val},
+            automatic_lights()
+    end.
+
 
 
 
