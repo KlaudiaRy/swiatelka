@@ -1,0 +1,69 @@
+======Inteligentne oświetlenie=======
+Naturalna jasnosc    - symulacja światła dziennego (przesuwa się o losowe wartości  między 0 a 500 lx)
+Potrzebne oswietlenie   - w zależności od wybranego zapotrzebowania,
+automatyczne oswietlenie   zapotrzebowanie - światło naturalne >=0,
+Stan czujników      on/off,
+Lamp            on/off do zmiany lub usunięcia
+Lamp Start      - można zmienić na czas włączenia jako pobudka 
+Lamp Stop          i wyłączenie jako godzina nocna/spania
+Last feed       - do usunięcia chyba
+
+=======================================
+
+        [0] Exit \n
+        [1] Given temp UP\n
+        [2] Given temp DOWN\n
+        [3] zepsuj/napraw czujniki\n
+        [4] Set lamp start time\n
+        [5] Set lamp stop time\n
+        [6] Vouch feed date\n
+        [7] minimalne oświetlenie/ brak \n
+        [8] Zapotrzebowanie na oświetlenie nocne \n
+        [9] Zapotrzebowanie na oświetlenie delikatne\n
+        [10] Zapotrzebowanie na oświetlenie do pracy przy komputerze \n
+        [11] Zapotrzebowanie na oświetlenie do pracy szczegółowej\n
+        [12] Zapotrzebowanie na pełne oświetlenie\n
+7-12 zmieniają potrzebne oświetlenie, 1-2 zmieniają je ręcznie
+6- do usunięcia
+
+można ew dodać np:
+ilość lamp = i od tego może zależeć maksymalne natężenie
+żarówki do wymiany = można generować losowe numery np żarówka nr 5 i wtedy jej moc odejmować od max natężenia?
+
+
+
+================
+Informacje z wikipedii:
+Dla orientacji – według normy PN-EN 12 464-1: 2004 zalecane natężenie oświetlenia:
+
+rozpoznanie rysów twarzy – 20 lx
+wykonywanie prostych czynności – 50 lx
+kuźnia (kucie swobodne), warsztat – 200 lx
+obsługa komputera, prace biurowe – 500 lx
+montaż precyzyjny, mikromechanika, zakład jubilerski – 1000 lx
+oraz dla porównania (wartości orientacyjne zależne od różnych czynników, np.: pory roku i dnia, stopnia zachmurzenie czy czystości powietrza):
+
+oświetlenie powierzchni ziemi przez Księżyc w pełni w pogodną noc – 0,2 lx
+oświetlenie uliczne w nocy – 5–10 lx
+pomieszczenie od zacienionej strony w środku dnia – 300 lx
+oświetlenie słoneczne terenu na zewnątrz (zachmurzone niebo) – 5000 lx
+słoneczny letni dzień (czyste niebo na równiku) – 100.000–110.000 lx.
+===================
+
+
+uruchamianie:
+kompilacja plików
+c(aqua).
+c(display).
+c(helper).
+
+uruchomienie
+aqua:run().
+
+nr komendy + Enter
+
+
+
+
+edycja:
+info - wszystkie PID'y muszą być w wywołaniu funkcji main bo inaczej wyrzuca 'unbounded'
