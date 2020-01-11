@@ -1,5 +1,5 @@
 ======Inteligentne oświetlenie=======
-Naturalna jasnosc    - symulacja światła dziennego (przesuwa się o losowe wartości  między 0 a 500 lx)
+Naturalna jasnosc    - symulacja światła dziennego (przesuwa się o losowe wartości  między 0 a 5000 lx)
 Potrzebne oswietlenie   - w zależności od wybranego zapotrzebowania,
 automatyczne oswietlenie   zapotrzebowanie - światło naturalne >=0,
 Stan czujników      on/off,
