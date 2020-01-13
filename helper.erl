@@ -1,5 +1,5 @@
 -module(helper).
--export([round1dec/1, check_time/2, is_light_avaliable/1,is_temp_avaliable/1, get_time/0, read_from_file/1, write_to_file/2, date_dm/0]).
+-export([round1dec/1, check_time/2, is_light_avaliable/1, get_time/0]).
 
 % Dedfines 
 -define(max_temp, 34).
@@ -36,17 +36,6 @@ check_time({Start_HM},{Stop_HM}) ->
             end
     end.
 
-is_temp_avaliable(Temp) -> 
-    if 
-        Temp > ?max_temp ->
-            ?max_temp;
-
-        Temp < ?min_temp ->
-            ?min_temp;
-
-        true -> 
-            Temp
-    end.
 
 is_light_avaliable(Light) -> 
     if 
@@ -93,38 +82,3 @@ get_time() ->
             end,
             {Ret_H, Ret_M}
     end.
-
-read_from_file(File_path) ->
-    {ok,F} = file:open(File_path, [read]),
-    try
-        {ok,Str} = file:read(F, 1024*1024),
-        string:left(Str,5)
-    after
-        file:close(F)
-    end.
-
-write_to_file(File_path, Value) ->
-    {ok,F} = file:open(File_path, [write]),
-    try
-        file:write(F, Value)
-    after
-        file:close(F)
-    end.  
-
-date_dm() ->
-    {Date, _} = erlang:localtime(),
-    {_, M, D} = Date,
-    if
-        M < 10 ->
-            Ret_M = "0" ++ integer_to_list(M);
-
-        true ->
-            Ret_M = integer_to_list(M)
-    end,
-    if
-        D < 10 ->
-            Ret_D = "0" ++ integer_to_list(D);
-        true ->
-            Ret_D = integer_to_list(D)
-    end,
-    Ret_D ++ "/" ++ Ret_M.

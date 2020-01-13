@@ -1,9 +1,9 @@
 -module(display).
--export([draw_panel/6]).
+-export([draw_panel/5]).
 
 -import(helper, [round1dec/1]).
 
-draw_panel(Daylight,Actual, Given, Sens_damage, {Stat1, {{Given_start_H, Given_start_M},{Given_stop_H, Given_stop_M}}}, Feed_date) ->
+draw_panel(Daylight,Actual, Given, Sens_damage, {Stat1, {{Given_start_H, Given_start_M},{Given_stop_H, Given_stop_M}}}) ->
     io:format("\t ==========================\n"),
     io:format("\t||Naturalna jasnosc    ~p lx ||\n", [Daylight]),
     io:format("\t||Potrzebne oswietlenie   ~p lx ||\n", [Given]),
@@ -12,7 +12,6 @@ draw_panel(Daylight,Actual, Given, Sens_damage, {Stat1, {{Given_start_H, Given_s
     io:format("\t||Lamp             ~s    ||\n", [add_space_after(Stat1)]),
     io:format("\t||Lamp Start      ~s   ||\n", [time_string({Given_start_H, Given_start_M})]),
     io:format("\t||Lamp Stop       ~s   ||\n", [time_string({Given_stop_H, Given_stop_M})]),
-    io:format("\t||Last feed       ~s   ||\n", [Feed_date]),
     time_hm(),
     io:format("\t =========================="),
     option_menu().
@@ -21,18 +20,17 @@ draw_panel(Daylight,Actual, Given, Sens_damage, {Stat1, {{Given_start_H, Given_s
 option_menu() ->
     io:format("\n
         [0] Exit \n
-        [1] Given temp UP\n
-        [2] Given temp DOWN\n
+        [1] Zwieksz potrzebne oswietlenie +50 lx\n
+        [2] Zmniejsz potrzebne oswietlenie -50 lx\n
         [3] zepsuj/napraw czujniki\n
         [4] Set lamp start time\n
         [5] Set lamp stop time\n
-        [6] Vouch feed date\n
-        [7] minimalne oświetlenie/ brak \n
-        [8] Zapotrzebowanie na oświetlenie nocne \n
-        [9] Zapotrzebowanie na oświetlenie delikatne\n
-        [10] Zapotrzebowanie na oświetlenie do pracy przy komputerze \n
-        [11] Zapotrzebowanie na oświetlenie do pracy szczegółowej\n
-        [12] Zapotrzebowanie na pełne oświetlenie\n
+        [7] minimalne oswietlenie/ brak \n
+        [8] Zapotrzebowanie na oswietlenie nocne \n
+        [9] Zapotrzebowanie na oswietlenie delikatne\n
+        [10] Zapotrzebowanie na oswietlenie do pracy przy komputerze \n
+        [11] Zapotrzebowanie na oswietlenie do pracy szczegolowej\n
+        [12] Zapotrzebowanie na pelne oswietlenie\n
 
 Select: ").
 
