@@ -30,7 +30,7 @@ run() ->
 
 %nasłuchiwacz pobiera komendy po uruchomieniu lights:run().
 control_listener({P_main}) ->
-    {Command,_} = string:to_integer(io:get_line("")), %bieże komendę
+    {Command,_} = string:to_integer(io:get_line("")), %bierze komendę
     if
 		Command < 0 ->
 			io:format("Podaj liczbe z zakresu od 0 do 14\n\n");
