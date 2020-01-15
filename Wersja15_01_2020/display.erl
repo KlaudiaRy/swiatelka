@@ -9,7 +9,7 @@ draw_panel(Daylight,Actual, Given, Sens_damage, {Stat1, {{Given_start_H, Given_s
     io:format("\t||Potrzebne oswietlenie        ~p lx  \n", [Given]),
     io:format("\t||Automatyczne oswietlenie     ~p lx  \n", [Actual]),
     io:format("\t||Stan czujnikow               ~s     \n", [Sens_damage]),
-    io:format("\t||Stan lamp                    ~s     \n", [add_space_after(Stat1)]),
+    io:format("\t||Stan lamp                    ~s     \n", [Stat1]),
     io:format("\t||Lampy aut. Start             ~s     \n", [time_string({Given_start_H, Given_start_M})]),
     io:format("\t||Lampy aut. Stop              ~s     \n", [time_string({Given_stop_H, Given_stop_M})]),
     time_hm(),
@@ -34,18 +34,7 @@ option_menu() ->
         [12] Zapotrzebowanie na pelne oswietlenie\n
         [13] Wlacz Lampy - przelacza na tryb manualny\n
         [14] Wroc do trybu automatycznego zarzadzania stanem lamp\n
-Select: ").
-
-
-add_space_after(Value) ->
-    if
-        Value =:= on ->
-            lists:concat([Value, " "]);
-
-        true -> 
-            Value
-    end.
-
+Numer Komendy: ").
 
 time_string({H,M}) ->
     if 
@@ -58,7 +47,6 @@ time_string({H,M}) ->
         H < 10 andalso M < 10 ->
             "0" ++ integer_to_list(H) ++ ":0" ++ integer_to_list(M)
     end.
-
 
 time_hm() ->
     {_,Time} = erlang:localtime(),
