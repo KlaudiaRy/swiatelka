@@ -1,8 +1,6 @@
 -module(extras).
 -export([round1dec/1, check_time/2, is_light_avaliable/1, get_time/0]).
 
-% Dedfines 
-
 -define(min_brightness,0). %lampy wyłączone
 
 round1dec(Number) ->
@@ -29,7 +27,6 @@ check_time({Start_HM},{Stop_HM}) ->
             end
     end.
 
-
 is_light_avaliable(Light) -> 
     if 
         Light < ?min_brightness ->
@@ -39,9 +36,6 @@ is_light_avaliable(Light) ->
             Light
     end.
 
-
-
-
 get_time() ->
     Time = string:left(io:get_line("Set time (gg:mm): "),5),
     Test = re:run(Time, "^[0-9]{2}:[0-9]{2}$"),
@@ -49,27 +43,22 @@ get_time() ->
         Test =:= nomatch ->
             io:format("Wrong input data!\n"),
             get_time();
-
         true -> 
             {H, _} = string:to_integer(string:left(Time,2)),
             {M, _} = string:to_integer(string:right(Time,2)),
             if
                 H > 23 ->
                     Ret_H = 0;
-
                 H < 0 ->
                     Ret_H = 0;
-
                 true -> 
                     Ret_H = H
             end,
             if
                 M > 59 ->
                     Ret_M = 0;
-
                 M < 0 ->
                     Ret_M = 0;
-
                 true -> 
                     Ret_M = M
             end,

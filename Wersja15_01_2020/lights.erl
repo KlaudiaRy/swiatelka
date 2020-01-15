@@ -2,7 +2,7 @@
 -export([run/0, main/1, timer/1]).
 
 % Imports
--import(display, [draw_panel/5]).
+-import(display, [display_window/5]).
 -import(extras, [round1dec/1, check_time/2, is_light_avaliable/1, get_time/0]).
 
 
@@ -42,14 +42,14 @@ control_listener({P_main}) ->
     control_listener({P_main}). %ponownie nasłuchuje - uruchamia sam siebie
 
 
-main({P_lamp,Daylight,P_bright,P_day,Up_down,P_timer, Actual_temp, Sens_damage, Given, Stat}) -> %przybiera wszystkie zmienialne dane
+main({P_lamp,Daylight,P_bright,P_day,Up_down,P_timer, Actual_light, Sens_damage, Given, Stat}) -> %przybiera wszystkie zmienialne dane
     io:format(os:cmd(clear)),
-    io:format("----===== Inteligentne Oswietlenie =====---- \n\n"),
+    io:format("\n----===== Inteligentne Oswietlenie =====---- \n\n"),
     
+%czy czujniki sa zepsute - odpowiednia informacja
     if
         Sens_damage =:= 0 ->
             Sens_status = "Aktywne ";
-
         true ->
             Sens_status = "Nieaktywne"
     end,
@@ -63,108 +63,110 @@ main({P_lamp,Daylight,P_bright,P_day,Up_down,P_timer, Actual_temp, Sens_damage, 
         true ->
             Up_down_n = Up_down
     end,
-
-    draw_panel(Daylight, Actual_temp, Given, Sens_status, Stat),
+    %rysowanie okna
+    display_window(Daylight, Actual_light, Given, Sens_status, Stat),
     receive
+        %zmiana wartosci automatycznego oswietlenia
         {data, up, Value} ->
-            Updated_temp = Actual_temp + Value,
-            main({P_lamp,Daylight,P_bright,P_day,Up_down_n,P_timer, Updated_temp, Sens_damage, Given, Stat });
+            Updated_light = Actual_light + Value,
+            main({P_lamp,Daylight,P_bright,P_day,Up_down_n,P_timer, Updated_light, Sens_damage, Given, Stat });
 
         {data, down, Value} ->
-            Updated_temp = Actual_temp - Value,
-            main({P_lamp,Daylight,P_bright,P_day,Up_down_n,P_timer, Updated_temp, Sens_damage, Given, Stat });
+            Updated_light = Actual_light - Value,
+            main({P_lamp,Daylight,P_bright,P_day,Up_down_n,P_timer, Updated_light, Sens_damage, Given, Stat });
 
-        {lamp, Stat_New} ->
-            main({P_lamp,Daylight,P_bright,P_day,Up_down_n,P_timer, Actual_temp, Sens_damage, Given, Stat_New });
-        {lamp, Stat_New,on} ->
-            main({P_lamp,Daylight,P_bright,P_day,Up_down_n,P_timer, Actual_temp, Sens_damage, Given, Stat_New });
+        {lamp, Stat_New} -> %otrzymany automatyczny stan lamp
+            main({P_lamp,Daylight,P_bright,P_day,Up_down_n,P_timer, Actual_light, Sens_damage, Given, Stat_New });
+        
+         %manualne stany lamp
+        {lamp, Stat_New,on} -> 
+            main({P_lamp,Daylight,P_bright,P_day,Up_down_n,P_timer, Actual_light, Sens_damage, Given, Stat_New });
         {lamp, Stat_New,off} ->
             main({P_lamp,Daylight,P_bright,P_day,Up_down_n,P_timer, 0, Sens_damage, 0, Stat_New });
         
     
-        {brightness, Perfect_val} ->
+        {brightness, Perfect_val} -> %otrzymana dobrana wartosc swiatla sztucznego
             main({P_lamp,Daylight,P_bright,P_day,Up_down_n,P_timer, Perfect_val, Sens_damage, Given, Stat });
         
-        {daylights, Val} ->
-            main({P_lamp,Val,P_bright,P_day,Up_down_n,P_timer, Actual_temp, Sens_damage, Given, Stat });
+        {daylights, Val} -> %zmiana swiatla naturalnego
+            main({P_lamp,Val,P_bright,P_day,Up_down_n,P_timer, Actual_light, Sens_damage, Given, Stat });
 
-        {control, 0} -> %Exit
+        {control, 0} -> %Wyjscie z programu - > exit
             init:stop(0);
 
-          {control, 1} -> %Given light UP
+          {control, 1} -> %zwiekszenie preferowanego oswietlenia
             Given_plus_one = Given + 50,
             Given_checked = is_light_avaliable(Given_plus_one),
-            main({P_lamp,Daylight,P_bright,P_day,Up_down_n,P_timer, Actual_temp, Sens_damage, Given_checked, Stat });
+            main({P_lamp,Daylight,P_bright,P_day,Up_down_n,P_timer, Actual_light, Sens_damage, Given_checked, Stat });
 
-        {control, 2} -> %Given light DOWN
+        {control, 2} -> %zmniejszenie preferowanego oswietlenia
             Given_subs_one = Given - 50,
             Given_checked = is_light_avaliable(Given_subs_one),
-            main({P_lamp,Daylight,P_bright,P_day,Up_down_n,P_timer, Actual_temp, Sens_damage, Given_checked, Stat });
+            main({P_lamp,Daylight,P_bright,P_day,Up_down_n,P_timer, Actual_light, Sens_damage, Given_checked, Stat });
         
-        {control, 3} -> %sensor error
-            if 
-                Sens_damage =:= 1 ->
-                    % Turn off sensor errror
-                    main({P_lamp,Daylight,P_bright,P_day,Up_down_n,P_timer, Actual_temp, 0, Given, Stat });
-                true -> 
-                    %  Turn on sensor errror
-                    main({P_lamp,Daylight,P_bright,P_day,Up_down_n,P_timer, Actual_temp, 1, Given, Stat })
-            end;
+        {control, 3} -> %zepsucie czujnika
+                    if 
+                        Sens_damage =:= 1 ->
+                            main({P_lamp,Daylight,P_bright,P_day,Up_down_n,P_timer, Actual_light, 0, Given, Stat });
+                        true -> 
+                            main({P_lamp,Daylight,P_bright,P_day,Up_down_n,P_timer, Actual_light, 1, Given, Stat })
+                    end;
 
-        {control, 4} -> %Set lamp start time
-            {H, M} = get_time(),
-            P_timer ! {time_to_start,H,M, self()},
-            main({P_lamp,Daylight,P_bright,P_day,Up_down_n,P_timer, Actual_temp, Sens_damage, Given, Stat });
+        {control, 4} -> %Ustawienie czasu włączenia lamp
+                    {H, M} = get_time(),
+                    P_timer ! {time_to_start,H,M, self()},
+                    main({P_lamp,Daylight,P_bright,P_day,Up_down_n,P_timer, Actual_light, Sens_damage, Given, Stat });
 
-        {control, 5} -> %Set lamp stop time
-            {H, M} = get_time(),
-            P_timer ! {time_to_stop,H,M, self()},
-            main({P_lamp,Daylight,P_bright,P_day,Up_down_n,P_timer, Actual_temp, Sens_damage, Given, Stat });
+        {control, 5} -> %Ustawienie czasu wylaczenia lamp
+                    {H, M} = get_time(),
+                    P_timer ! {time_to_stop,H,M, self()},
+                    main({P_lamp,Daylight,P_bright,P_day,Up_down_n,P_timer, Actual_light, Sens_damage, Given, Stat });
 
         {control, 6} -> %wylacz lampy
-            P_lamp!{offf,self(),Stat},
-            main({P_lamp,Daylight,P_bright,P_day,Up_down_n,P_timer, 0, Sens_damage, ?minimum_light, Stat });
+                    P_lamp!{offf,self(),Stat},
+                    main({P_lamp,Daylight,P_bright,P_day,Up_down_n,P_timer, 0, Sens_damage, ?minimum_light, Stat });
         {control, 13} -> %wlacz lampy
-            P_lamp!{onn,self(),Stat},
-            main({P_lamp,Daylight,P_bright,P_day,Up_down_n,P_timer, Actual_temp, Sens_damage, ?given_light_prefference, Stat });
+                    P_lamp!{onn,self(),Stat},
+                    main({P_lamp,Daylight,P_bright,P_day,Up_down_n,P_timer, Actual_light, Sens_damage, ?given_light_prefference, Stat });
 
         {control, 7} -> %minimalne oswietlenie/ brak
-            main({P_lamp,Daylight,P_bright,P_day,Up_down_n,P_timer, Actual_temp, Sens_damage, ?minimum_light, Stat });
+                    main({P_lamp,Daylight,P_bright,P_day,Up_down_n,P_timer, Actual_light, Sens_damage, ?minimum_light, Stat });
 
-{control, 8} -> %Zapotrzebowanie na oswietlenie nocne
-            main({P_lamp,Daylight,P_bright,P_day,Up_down_n,P_timer, Actual_temp, Sens_damage, ?night_light, Stat });
+        {control, 8} -> %Zapotrzebowanie na oswietlenie nocne
+                    main({P_lamp,Daylight,P_bright,P_day,Up_down_n,P_timer, Actual_light, Sens_damage, ?night_light, Stat });
 
-{control, 9} -> %Zapotrzebowanie na oswietlenie delikatne
+        {control, 9} -> %Zapotrzebowanie na oswietlenie delikatne
 
-            main({P_lamp,Daylight,P_bright,P_day,Up_down_n,P_timer, Actual_temp, Sens_damage, ?soft_light, Stat });
+                    main({P_lamp,Daylight,P_bright,P_day,Up_down_n,P_timer, Actual_light, Sens_damage, ?soft_light, Stat });
 
-{control, 10} -> %Zapotrzebowanie na oswietlenie do pracy przy komputerze
+        {control, 10} -> %Zapotrzebowanie na oswietlenie do pracy przy komputerze
 
-            main({P_lamp,Daylight,P_bright,P_day,Up_down_n,P_timer, Actual_temp, Sens_damage, ?computer_work_light, Stat });
+                    main({P_lamp,Daylight,P_bright,P_day,Up_down_n,P_timer, Actual_light, Sens_damage, ?computer_work_light, Stat });
 
-{control, 11} -> %Zapotrzebowanie na oswietlenie do pracy szczegolowej
+        {control, 11} -> %Zapotrzebowanie na oswietlenie do pracy szczegolowej
 
-            main({P_lamp,Daylight,P_bright,P_day,Up_down_n,P_timer, Actual_temp, Sens_damage, ?work_light, Stat });
+                    main({P_lamp,Daylight,P_bright,P_day,Up_down_n,P_timer, Actual_light, Sens_damage, ?work_light, Stat });
 
-{control, 12} -> %Zapotrzebowanie na pelne oswietlenie
+        {control, 12} -> %Zapotrzebowanie na pelne oswietlenie
 
-            main({P_lamp,Daylight,P_bright,P_day,Up_down_n,P_timer, Actual_temp, Sens_damage, ?maximum_light, Stat });
-{control, 14} -> %Wroc do trybu automatycznego zarzadzania stanem lamp
-            P_lamp!{on_aut,self(),Stat},
-            main({P_lamp,Daylight,P_bright,P_day,Up_down_n,P_timer, Actual_temp, Sens_damage, ?maximum_light, Stat });
+                    main({P_lamp,Daylight,P_bright,P_day,Up_down_n,P_timer, Actual_light, Sens_damage, ?maximum_light, Stat });
+        {control, 14} -> %Wroc do trybu automatycznego zarzadzania stanem lamp
+                    P_lamp!{on_aut,self(),Stat},
+                    main({P_lamp,Daylight,P_bright,P_day,Up_down_n,P_timer, Actual_light, Sens_damage, ?maximum_light, Stat });
 
         _ ->
-            main({P_lamp,Daylight,P_bright,P_day,Up_down_n,P_timer, Actual_temp, Sens_damage, Given, Stat })
+            main({P_lamp,Daylight,P_bright,P_day,Up_down_n,P_timer, Actual_light, Sens_damage, Given, Stat })
         
-
+    %po sekundzie:
     after 1000 -> 
         if
+            %o ile działa czujnik:
             Sens_damage =:= 0 ->
                 P_bright!{onn,self(),Daylight,Given},
-              
+            
                 P_day!{Up_down,self(),Daylight},
 
-                main({P_lamp,Daylight,P_bright,P_day,Up_down_n,P_timer, Actual_temp, Sens_damage, Given, Stat });
+                main({P_lamp,Daylight,P_bright,P_day,Up_down_n,P_timer, Actual_light, Sens_damage, Given, Stat });
                 
             true ->
                 main({P_lamp,0,P_bright,P_day,Up_down_n,P_timer, Given, Sens_damage, Given, Stat })
@@ -203,7 +205,7 @@ daylight_changer() ->
     end.
 
 
-% Timer process main function
+% Decyzje o stanie wlaczenia lamp
 timer({{Given_start_H, Given_start_M},{Given_stop_H, Given_stop_M},P_main, P_lamp, State}) ->
     A = check_time({Given_start_H * 60 + Given_start_M},{Given_stop_H * 60 + Given_stop_M}),
     if
@@ -227,7 +229,7 @@ timer({{Given_start_H, Given_start_M},{Given_stop_H, Given_stop_M},P_main, P_lam
         timer({{Given_start_H, Given_start_M},{Given_stop_H, Given_stop_M},P_main,P_lamp, State})
     end.
 
-% Lamp process main function
+% Stan wlaczenia lamp
 lamp() ->
     receive
         {_, undefined, _} ->

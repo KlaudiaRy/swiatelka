@@ -1,9 +1,9 @@
 -module(display).
--export([draw_panel/5]).
+-export([display_window/5]).
 
 -import(extras, [round1dec/1]).
 
-draw_panel(Daylight,Actual, Given, Sens_damage, {Stat1, {{Given_start_H, Given_start_M},{Given_stop_H, Given_stop_M}}}) ->
+display_window(Daylight,Actual, Given, Sens_damage, {Stat1, {{Given_start_H, Given_start_M},{Given_stop_H, Given_stop_M}}}) ->
     io:format("\t _________________________________________\n"),
     io:format("\t||Naturalna jasnosc            ~p lx  \n", [Daylight]),
     io:format("\t||Potrzebne oswietlenie        ~p lx  \n", [Given]),
@@ -14,10 +14,10 @@ draw_panel(Daylight,Actual, Given, Sens_damage, {Stat1, {{Given_start_H, Given_s
     io:format("\t||Lampy aut. Stop              ~s     \n", [time_string({Given_stop_H, Given_stop_M})]),
     time_hm(),
     io:format("\t =========================================="),
-    option_menu().
+    choices().
 
 
-option_menu() ->
+choices() ->
     io:format("\n
         [0] Exit \n
         [1] Zwieksz potrzebne oswietlenie +50 lx\n
